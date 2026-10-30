@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
-<title>Web v6</title>
+<title>Web v7</title>
 <style>
 :root {
   --bg: #0f1115; --panel: #1a1d24; --surface: #242830; --border: #2e333d;
@@ -211,6 +211,8 @@ let connected = false, hasFrame = false, wantConnected = false;
 let currentRoom = '';
 let hostMediaId = '', hostCtrlId = '';
 let frames = 0, fps = 0, lastFpsTime = performance.now();
+let lastFrameAt = 0;
+let frameWatchTimer = null;
 let intentionalClose = false;
 let keepAliveTimer = null, reconnectTimer = null, connectTimeout = null;
 let reconnectAttempt = 0;
@@ -226,9 +228,10 @@ function setConnectedUI(on) {
 }
 
 function clearTimers() {
-  [keepAliveTimer, reconnectTimer, connectTimeout].forEach(t => { if (t) clearTimeout(t); });
-  if (keepAliveTimer) clearInterval(keepAliveTimer);
-  keepAliveTimer = reconnectTimer = connectTimeout = null;
+  [keepAliveTimer, reconnectTimer, connectTimeout, frameWatchTimer].forEach(t => {
+    if (t) { try { clearTimeout(t); clearInterval(t); } catch {} }
+  });
+  keepAliveTimer = reconnectTimer = connectTimeout = frameWatchTimer = null;
 }
 
 function sendOn(ws, kind, from, payload, to) {
@@ -243,10 +246,12 @@ function sendInput(obj) {
   if (!wsCtrl || wsCtrl.readyState !== 1) return;
   if (!hasFrame && !connected) return;
   const payload = Object.assign({ t: Date.now() }, obj);
-  // 控制通道专用：定向 host-c + 广播
-  if (hostCtrlId) sendOn(wsCtrl, 'ctrl', ID_PAD, payload, hostCtrlId);
-  sendOn(wsCtrl, 'ctrl', ID_PAD, payload, undefined);
-  sendOn(wsCtrl, 'input', ID_PAD, payload, hostCtrlId || undefined);
+  // 只走控制通道，避免同一指令发多次造成鼠标抖动
+  if (hostCtrlId) {
+    sendOn(wsCtrl, 'ctrl', ID_PAD, payload, hostCtrlId);
+  } else {
+    sendOn(wsCtrl, 'ctrl', ID_PAD, payload, undefined);
+  }
 }
 
 function markReady() {
@@ -293,7 +298,14 @@ function scheduleReconnect() {
   if (!wantConnected || intentionalClose || reconnectTimer) return;
   const delay = Math.min(12000, 1500 * Math.pow(1.5, reconnectAttempt++));
   setStatus('重连中…', 'connecting');
-  reconnectTimer = setTimeout(() => { reconnectTimer = null; connect(true); }, delay);
+  reconnectTimer = setTimeout(() => {
+    reconnectTimer = null;
+    // 强制关掉旧连接再连，避免僵尸 socket 占着不收帧
+    try { wsMedia && wsMedia.close(); } catch {}
+    try { wsCtrl && wsCtrl.close(); } catch {}
+    wsMedia = wsCtrl = null;
+    connect(true);
+  }, delay);
 }
 
 function startKeepAlive() {
@@ -302,6 +314,24 @@ function startKeepAlive() {
     sendOn(wsCtrl, 'ping', ID_PAD, { t: Date.now() }, hostCtrlId || undefined);
     sendOn(wsMedia, 'ping', ID_VIEW, { t: Date.now() }, hostMediaId || undefined);
   }, 8000);
+  // 画面停更检测：超过 10s 无新帧则自动重连
+  if (frameWatchTimer) clearInterval(frameWatchTimer);
+  frameWatchTimer = setInterval(() => {
+    if (!wantConnected || intentionalClose) return;
+    if (!hasFrame || !lastFrameAt) return;
+    const gap = Date.now() - lastFrameAt;
+    if (gap > 10000) {
+      console.warn('frame stalled', gap, 'ms → reconnect');
+      setStatus('画面中断，重连中…', 'connecting');
+      scheduleReconnect();
+    } else if (gap > 5000) {
+      setStatus('画面延迟…', 'connecting');
+      // 主动 ping 刺激一下
+      sendOn(wsMedia, 'ping', ID_VIEW, { t: Date.now(), resume: true }, hostMediaId || undefined);
+    } else if (connected) {
+      setStatus('Connected', '');
+    }
+  }, 2000);
 }
 
 function openSocket(url, fromId, onMsg) {
@@ -384,6 +414,7 @@ function onMediaMessage(ev) {
       statsEl.textContent = fps + ' FPS · ' + canvas.width + '×' + canvas.height +
         ' · ctrl:' + (wsCtrl && wsCtrl.readyState === 1 ? 'on' : 'off');
     }
+    lastFrameAt = Date.now();
     if (!hasFrame) {
       hasFrame = true;
       markReady();
@@ -457,12 +488,15 @@ function canvasToRemote(e) {
   return { x: Math.round(cx / (meta.scale || 0.4)), y: Math.round(cy / (meta.scale || 0.4)) };
 }
 
+let _lx = -9999, _ly = -9999;
 canvas.addEventListener('mousemove', e => {
   if (!hasFrame) return;
   const now = performance.now();
-  if (now - lastMouseSend < 30) return;
-  lastMouseSend = now;
+  if (now - lastMouseSend < 50) return;
   const { x, y } = canvasToRemote(e);
+  if (Math.abs(x - _lx) < 3 && Math.abs(y - _ly) < 3) return;
+  lastMouseSend = now;
+  _lx = x; _ly = y;
   curX = x; curY = y;
   sendInput({ type: 'mouse', x, y });
 });
@@ -524,12 +558,18 @@ let curX = 960, curY = 540;
     clamp();
     sendInput({ type: 'mouse', x: Math.round(curX), y: Math.round(curY) });
   }
+  let lastJoySend = 0;
   function loop() {
     if (joyTouchId === null) { joyRaf = null; return; }
+    const now = performance.now();
     if (Math.abs(joyDX) > 0.04 || Math.abs(joyDY) > 0.04) {
       curX += joyDX * JOY_SPEED;
       curY += joyDY * JOY_SPEED;
-      sendPos();
+      // 摇杆指令节流，减轻闪烁
+      if (now - lastJoySend >= 45) {
+        lastJoySend = now;
+        sendPos();
+      }
     }
     joyRaf = requestAnimationFrame(loop);
   }
