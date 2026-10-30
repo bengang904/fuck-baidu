@@ -2,8 +2,12 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Web v1</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Web v3</title>
 <style>
 :root {
   --bg: #0f1115;
@@ -18,15 +22,25 @@
   --red: #ef4444;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+  touch-action: manipulation;
+}
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background: var(--bg);
   color: var(--text);
-  height: 100vh;
-  height: 100dvh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  position: fixed;
+  inset: 0;
+  /* iPhone 刘海 / Home 指示条 */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 .topbar {
   background: var(--panel);
@@ -78,6 +92,7 @@ body {
 .input:focus { border-color: var(--accent); }
 .main {
   flex: 1;
+  min-height: 0; /* iOS flex 子项高度修复 */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -85,6 +100,9 @@ body {
   position: relative;
   overflow: hidden;
   cursor: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: none;
 }
 .main.idle { cursor: default; }
 #screen {
@@ -93,6 +111,8 @@ body {
   display: block;
   background: #111;
   user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
 }
 .overlay {
   position: absolute;
@@ -157,6 +177,7 @@ body {
   background: var(--panel);
   border-top: 1px solid var(--border);
   padding: 6px 16px;
+  padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
   font-size: .75rem;
   color: var(--muted);
   flex-shrink: 0;
@@ -168,6 +189,113 @@ kbd {
   padding: 1px 5px;
   font-size: .7rem;
 }
+
+/* ===== Mobile touch controls (only on touch devices) ===== */
+.touch-layer {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+}
+.joy-zone, .btn-zone {
+  position: absolute;
+  bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.joy-zone {
+  left: 16px;
+  width: 148px;
+  height: 148px;
+  z-index: 21;
+}
+.joy-base {
+  width: 148px;
+  height: 148px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.16);
+  border: 2px solid rgba(255,255,255,.35);
+  position: relative;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.joy-stick {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: rgba(59,130,246,.9);
+  border: 2px solid rgba(255,255,255,.55);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 4px 14px rgba(0,0,0,.45);
+  pointer-events: none; /* 避免挡住 base 的触摸 */
+}
+.btn-zone {
+  right: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: flex-end;
+  z-index: 21;
+}
+.touch-btn {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,.35);
+  background: rgba(30,30,40,.72);
+  color: #fff;
+  font-size: .9rem;
+  font-weight: 700;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(0,0,0,.4);
+  pointer-events: auto;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.touch-btn:active, .touch-btn.active {
+  background: rgba(59,130,246,.85);
+  border-color: rgba(255,255,255,.7);
+  transform: scale(0.94);
+}
+.touch-btn.right-btn {
+  width: 68px;
+  height: 68px;
+  font-size: .8rem;
+  background: rgba(80,30,30,.75);
+}
+.touch-btn.right-btn:active, .touch-btn.right-btn.active {
+  background: rgba(239,68,68,.8);
+}
+.touch-btn.scroll-btn {
+  width: 52px;
+  height: 42px;
+  border-radius: 12px;
+  font-size: .85rem;
+}
+.scroll-row {
+  display: flex;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+/* 仅移动端显示（含 iPhone；iOS 有时 pointer:fine，需 .is-mobile） */
+@media (pointer: coarse), (max-width: 768px) {
+  .touch-layer { display: block; }
+}
+html.is-mobile .touch-layer { display: block; }
+html.is-desktop .touch-layer { display: none !important; }
+
 </style>
 </head>
 <body>
@@ -197,15 +325,54 @@ kbd {
     </div>
   </div>
   <canvas id="screen" width="1280" height="720"></canvas>
+  
+  <div class="touch-layer" id="touchLayer">
+    <div class="joy-zone" id="joyZone">
+      <div class="joy-base" id="joyBase">
+        <div class="joy-stick" id="joyStick"></div>
+      </div>
+    </div>
+    <div class="btn-zone">
+      <div class="scroll-row">
+        <button type="button" class="touch-btn scroll-btn" id="scrollUp">↑</button>
+        <button type="button" class="touch-btn scroll-btn" id="scrollDown">↓</button>
+      </div>
+      <button type="button" class="touch-btn right-btn" id="btnRight">右键</button>
+      <button type="button" class="touch-btn" id="btnLeft">左键</button>
+    </div>
+  </div>
+
   <div class="stats" id="stats"></div>
 </div>
 
 <div class="tip-bar">
-  按 <kbd>Esc</kbd> 紧急断开 · 后台自动保活/重连 · 信令固定为 wss://wss.getlost.ovh
+  手机：左下摇杆移动鼠标 · 右下左键/右键 · 点屏幕也可定位 · <kbd>Esc</kbd> 紧急断开
 </div>
 
 <script>
 const $ = id => document.getElementById(id);
+
+/* iPhone / iPad / Android 检测：强制显示触摸控件 */
+(function detectMobile() {
+  const ua = navigator.userAgent || '';
+  const touch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  const mobileUA = /iPhone|iPad|iPod|Android|Mobile/i.test(ua);
+  // iPadOS 13+ 可能伪装成 Mac
+  const iPadOS = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+  const isMobile = mobileUA || iPadOS || (touch && Math.min(screen.width, screen.height) <= 900);
+  if (isMobile) document.documentElement.classList.add('is-mobile');
+  else document.documentElement.classList.add('is-desktop');
+
+  // 阻止 iOS 双击缩放、手势缩放
+  document.addEventListener('gesturestart', function (e) { e.preventDefault(); }, { passive: false });
+  let lastTouchEnd = 0;
+  document.addEventListener('touchend', function (e) {
+    const now = Date.now();
+    if (now - lastTouchEnd <= 300) e.preventDefault();
+    lastTouchEnd = now;
+  }, { passive: false });
+})();
+
 const statusEl = $('status');
 const wsUrlInput = $('wsUrl');
 const roomInput = $('roomCode');
@@ -662,6 +829,215 @@ window.addEventListener('pagehide', () => {
     } catch {}
   }
 });
+
+/* ===== Mobile virtual joystick + mouse buttons ===== */
+(function setupTouchControls() {
+  const touchLayer = document.getElementById('touchLayer');
+  const joyZone = document.getElementById('joyZone');
+  const joyBase = document.getElementById('joyBase');
+  const joyStick = document.getElementById('joyStick');
+  const btnLeft = document.getElementById('btnLeft');
+  const btnRight = document.getElementById('btnRight');
+  const scrollUp = document.getElementById('scrollUp');
+  const scrollDown = document.getElementById('scrollDown');
+  if (!joyBase || !btnLeft) return;
+
+  let curX = 960;
+  let curY = 540;
+  let joyActive = false;
+  let joyDX = 0, joyDY = 0;
+  let joyRaf = null;
+  const JOY_MAX = 52;
+  const JOY_SPEED = 16;
+
+  function remoteW() { return meta.width || 1920; }
+  function remoteH() { return meta.height || 1080; }
+
+  function clampCursor() {
+    curX = Math.max(0, Math.min(remoteW() - 1, curX));
+    curY = Math.max(0, Math.min(remoteH() - 1, curY));
+  }
+
+  function sendMousePos() {
+    if (!connected) return;
+    clampCursor();
+    sendInput({ type: 'mouse', x: Math.round(curX), y: Math.round(curY) });
+  }
+
+  function joyLoop() {
+    if (!joyActive) { joyRaf = null; return; }
+    if (Math.abs(joyDX) > 0.04 || Math.abs(joyDY) > 0.04) {
+      curX += joyDX * JOY_SPEED;
+      curY += joyDY * JOY_SPEED;
+      sendMousePos();
+    }
+    joyRaf = requestAnimationFrame(joyLoop);
+  }
+
+  function setStick(dx, dy) {
+    const mag = Math.hypot(dx, dy) || 1;
+    const c = Math.min(1, mag);
+    const nx = (dx / mag) * c;
+    const ny = (dy / mag) * c;
+    joyDX = nx;
+    joyDY = ny;
+    joyStick.style.transform =
+      'translate(calc(-50% + ' + (nx * JOY_MAX) + 'px), calc(-50% + ' + (ny * JOY_MAX) + 'px))';
+  }
+
+  function resetStick() {
+    joyDX = 0;
+    joyDY = 0;
+    joyActive = false;
+    joyStick.style.transform = 'translate(-50%, -50%)';
+  }
+
+  function clientPoint(e) {
+    if (e.touches && e.touches.length) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    if (e.changedTouches && e.changedTouches.length) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+    return { x: e.clientX, y: e.clientY };
+  }
+
+  function joyFromEvent(e) {
+    const p = clientPoint(e);
+    const rect = joyBase.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    return { dx: (p.x - cx) / JOY_MAX, dy: (p.y - cy) / JOY_MAX };
+  }
+
+  function onJoyMove(e) {
+    if (!joyActive) return;
+    e.preventDefault();
+    const { dx, dy } = joyFromEvent(e);
+    setStick(dx, dy);
+  }
+
+  function onJoyEnd(e) {
+    if (!joyActive) return;
+    e.preventDefault();
+    window.removeEventListener('touchmove', onJoyMove, true);
+    window.removeEventListener('touchend', onJoyEnd, true);
+    window.removeEventListener('touchcancel', onJoyEnd, true);
+    window.removeEventListener('mousemove', onJoyMove, true);
+    window.removeEventListener('mouseup', onJoyEnd, true);
+    resetStick();
+  }
+
+  function onJoyStart(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!connected) return;
+    // center cursor roughly if still default
+    joyActive = true;
+    const { dx, dy } = joyFromEvent(e);
+    setStick(dx, dy);
+    // 在 window 上跟踪，拖出圆盘也能继续动
+    window.addEventListener('touchmove', onJoyMove, { passive: false, capture: true });
+    window.addEventListener('touchend', onJoyEnd, { passive: false, capture: true });
+    window.addEventListener('touchcancel', onJoyEnd, { passive: false, capture: true });
+    window.addEventListener('mousemove', onJoyMove, true);
+    window.addEventListener('mouseup', onJoyEnd, true);
+    if (!joyRaf) joyRaf = requestAnimationFrame(joyLoop);
+  }
+
+  joyZone.addEventListener('touchstart', onJoyStart, { passive: false });
+  joyBase.addEventListener('touchstart', onJoyStart, { passive: false });
+  joyZone.addEventListener('mousedown', onJoyStart);
+
+  function bindHoldBtn(el, button) {
+    function fire(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!connected) return;
+      el.classList.add('active');
+      clampCursor();
+      // 若还没收到 meta，用画面中心
+      if (!meta.width) { curX = 960; curY = 540; }
+      sendInput({
+        type: 'click',
+        x: Math.round(curX),
+        y: Math.round(curY),
+        button: button,
+        clicks: 1
+      });
+    }
+    function release(e) {
+      if (e) e.preventDefault();
+      el.classList.remove('active');
+    }
+    el.addEventListener('touchstart', fire, { passive: false });
+    el.addEventListener('touchend', release, { passive: false });
+    el.addEventListener('touchcancel', release, { passive: false });
+    el.addEventListener('mousedown', fire);
+    el.addEventListener('mouseup', release);
+    el.addEventListener('mouseleave', release);
+  }
+  bindHoldBtn(btnLeft, 'left');
+  bindHoldBtn(btnRight, 'right');
+
+  function bindScroll(el, dy) {
+    function fire(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!connected) return;
+      sendInput({ type: 'scroll', dy: dy });
+    }
+    el.addEventListener('touchstart', fire, { passive: false });
+    el.addEventListener('mousedown', fire);
+  }
+  bindScroll(scrollUp, 3);
+  bindScroll(scrollDown, -3);
+
+  // 手指点/拖画面：绝对移动鼠标
+  let canvasTouchId = null;
+  canvas.addEventListener('touchstart', function (e) {
+    if (!connected) return;
+    if (e.target.closest && e.target.closest('.joy-zone, .btn-zone')) return;
+    const t = e.changedTouches[0];
+    canvasTouchId = t.identifier;
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width < 1 || rect.height < 1) return;
+    const cx = (t.clientX - rect.left) * (canvas.width / rect.width);
+    const cy = (t.clientY - rect.top) * (canvas.height / rect.height);
+    curX = cx / (meta.scale || 0.45);
+    curY = cy / (meta.scale || 0.45);
+    sendMousePos();
+  }, { passive: true });
+
+  canvas.addEventListener('touchmove', function (e) {
+    if (!connected || canvasTouchId === null) return;
+    let t = null;
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      if (e.changedTouches[i].identifier === canvasTouchId) {
+        t = e.changedTouches[i];
+        break;
+      }
+    }
+    if (!t) return;
+    const rect = canvas.getBoundingClientRect();
+    const cx = (t.clientX - rect.left) * (canvas.width / rect.width);
+    const cy = (t.clientY - rect.top) * (canvas.height / rect.height);
+    curX = cx / (meta.scale || 0.45);
+    curY = cy / (meta.scale || 0.45);
+    sendMousePos();
+  }, { passive: true });
+
+  canvas.addEventListener('touchend', function () { canvasTouchId = null; }, { passive: true });
+  canvas.addEventListener('touchcancel', function () { canvasTouchId = null; }, { passive: true });
+
+  // 桌面鼠标移动时同步本地光标记忆（方便之后点按键）
+  canvas.addEventListener('mousemove', function (e) {
+    if (!connected) return;
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width < 1) return;
+    const cx = (e.clientX - rect.left) * (canvas.width / rect.width);
+    const cy = (e.clientY - rect.top) * (canvas.height / rect.height);
+    curX = cx / (meta.scale || 0.45);
+    curY = cy / (meta.scale || 0.45);
+  });
+})();
+
 </script>
 </body>
 </html>
