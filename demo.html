@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="format-detection" content="telephone=no">
 <meta name="mobile-web-app-capable" content="yes">
-<title>Web v4</title>
+<title>Web v5</title>
 <style>
 :root {
   --bg: #0f1115;
@@ -657,8 +657,9 @@ function connect(isRetry) {
         return;
       }
       // 优先 host-*，保证输入发到被控端
-      const hid = others.find(id => String(id).startsWith('host-')) || others[0];
+      const hid = others.find(id => String(id).startsWith('host-')) || others.find(id => String(id).startsWith('host')) || others[0];
       hostId = hid;
+      if (hid) lastHostFrom = String(hid);
       cancelDisconnectTimer();
       clearTimeout(connectTimeout);
       if (!hasFrame) {
@@ -685,7 +686,7 @@ function connect(isRetry) {
       if (p.width) meta.width = p.width;
       if (p.height) meta.height = p.height;
       if (p.scale) meta.scale = p.scale;
-      if (m.from) hostId = String(m.from);
+      if (m.from) { hostId = String(m.from); lastHostFrom = hostId; }
       return;
     }
 
@@ -694,8 +695,7 @@ function connect(isRetry) {
       if (p.width) meta.width = p.width;
       if (p.height) meta.height = p.height;
       if (p.scale) meta.scale = p.scale;
-      if (m.from) hostId = String(m.from);
-      if (!hostId && m.from) hostId = String(m.from);
+      if (m.from) { hostId = String(m.from); lastHostFrom = hostId; }
       if (!p.data) return;
 
       lastFrameAt = Date.now();
@@ -769,12 +769,22 @@ function canvasToRemote(e) {
 }
 
 function sendInput(obj) {
-  if (!connected || !ws || ws.readyState !== 1) return;
-  // 优先发给 host；若还没有 hostId，房间内广播（兼容信令）
-  if (hostId) {
-    sendSignal('input', obj, hostId);
-  } else {
-    sendSignal('input', obj, undefined);
+  if (!ws || ws.readyState !== 1) return;
+  if (!connected && !hasFrame) return;
+  // 保证有目标：优先 hostId，否则用最近一帧来源
+  const target = hostId || lastHostFrom || '';
+  const payload = Object.assign({ t: Date.now() }, obj);
+  // 双通道：ctrl（新）+ input（旧）；带 to 与不带 to 各发一次，避免信令丢定向包
+  try {
+    if (target) {
+      sendSignal('ctrl', payload, target);
+      sendSignal('input', payload, target);
+    }
+    // 房间广播兜底（部分信令对未知 kind 只做房间转发）
+    sendSignal('ctrl', payload, undefined);
+    sendSignal('input', payload, undefined);
+  } catch (e) {
+    console.warn('sendInput', e);
   }
 }
 
