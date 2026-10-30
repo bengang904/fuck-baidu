@@ -5,295 +5,135 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="format-detection" content="telephone=no">
 <meta name="mobile-web-app-capable" content="yes">
-<title>Web v5</title>
+<title>Web v6</title>
 <style>
 :root {
-  --bg: #0f1115;
-  --panel: #1a1d24;
-  --surface: #242830;
-  --border: #2e333d;
-  --text: #e8eaed;
-  --muted: #8b929e;
-  --accent: #3b82f6;
-  --accent-hover: #2563eb;
-  --green: #22c55e;
-  --red: #ef4444;
+  --bg: #0f1115; --panel: #1a1d24; --surface: #242830; --border: #2e333d;
+  --text: #e8eaed; --muted: #8b929e; --accent: #3b82f6; --green: #22c55e; --red: #ef4444;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body {
-  width: 100%;
-  height: 100%;
-  height: 100dvh;
-  overflow: hidden;
-  overscroll-behavior: none;
-  -webkit-overflow-scrolling: touch;
-  touch-action: manipulation;
+  width: 100%; height: 100%; height: 100dvh; overflow: hidden;
+  overscroll-behavior: none; touch-action: manipulation;
 }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  display: flex;
-  flex-direction: column;
-  position: fixed;
-  inset: 0;
-  /* iPhone 刘海 / Home 指示条 */
+  background: var(--bg); color: var(--text);
+  display: flex; flex-direction: column; position: fixed; inset: 0;
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 .topbar {
-  background: var(--panel);
-  border-bottom: 1px solid var(--border);
-  padding: 10px 16px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-  z-index: 10;
-  flex-wrap: wrap;
+  background: var(--panel); border-bottom: 1px solid var(--border);
+  padding: 10px 16px; display: flex; align-items: center; gap: 10px;
+  flex-shrink: 0; z-index: 10; flex-wrap: wrap;
 }
-.topbar h1 { font-size: 1rem; font-weight: 600; white-space: nowrap; }
+.topbar h1 { font-size: 1rem; font-weight: 600; }
 .status {
-  font-size: .75rem;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-weight: 500;
-  background: rgba(34,197,94,.15);
-  color: var(--green);
+  font-size: .75rem; padding: 3px 10px; border-radius: 999px; font-weight: 500;
+  background: rgba(34,197,94,.15); color: var(--green);
 }
 .status.offline { background: rgba(239,68,68,.15); color: var(--red); }
 .status.connecting { background: rgba(59,130,246,.15); color: var(--accent); }
 .spacer { flex: 1; min-width: 8px; }
 .btn {
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 7px 14px;
-  font-size: .85rem;
-  font-weight: 500;
-  cursor: pointer;
+  background: var(--accent); color: #fff; border: none; border-radius: 6px;
+  padding: 7px 14px; font-size: .85rem; font-weight: 500; cursor: pointer;
 }
-.btn:hover { background: var(--accent-hover); }
 .btn:disabled { opacity: .55; cursor: not-allowed; }
 .btn-ghost { background: var(--surface); color: var(--text); }
-.btn-ghost:hover { background: #323844; }
 .input {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--text);
-  padding: 7px 10px;
-  font-size: .85rem;
-  outline: none;
-  width: 100%;
+  background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+  color: var(--text); padding: 7px 10px; font-size: .85rem; outline: none; width: 100%;
 }
 .input:focus { border-color: var(--accent); }
 .main {
-  flex: 1;
-  min-height: 0; /* iOS flex 子项高度修复 */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #000;
-  position: relative;
-  overflow: hidden;
-  cursor: none;
-  -webkit-user-select: none;
-  user-select: none;
-  touch-action: none;
+  flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center;
+  background: #000; position: relative; overflow: hidden; cursor: none;
+  -webkit-user-select: none; user-select: none; touch-action: none;
 }
 .main.idle { cursor: default; }
 #screen {
-  max-width: 100%;
-  max-height: 100%;
-  display: block;
-  background: #111;
-  user-select: none;
-  -webkit-user-select: none;
-  touch-action: none;
+  max-width: 100%; max-height: 100%; display: block; background: #111;
+  touch-action: none; -webkit-user-select: none;
 }
 .overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0,0,0,.78);
-  z-index: 5;
-  padding: 20px;
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.78); z-index: 5; padding: 20px;
 }
 .overlay.hidden { display: none; }
 .overlay-card {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 24px 28px;
-  width: min(380px, 100%);
-  text-align: center;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+  padding: 24px 28px; width: min(380px, 100%); text-align: center;
 }
 .overlay-card h2 { font-size: 1.05rem; margin-bottom: 6px; }
-.overlay-card p {
-  color: var(--muted);
-  font-size: .85rem;
-  line-height: 1.5;
-  margin-bottom: 16px;
-}
+.overlay-card p { color: var(--muted); font-size: .85rem; line-height: 1.5; margin-bottom: 16px; }
 .field { text-align: left; margin-bottom: 12px; }
 .field label {
-  display: block;
-  font-size: .75rem;
-  color: var(--muted);
-  margin-bottom: 4px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: .4px;
+  display: block; font-size: .75rem; color: var(--muted); margin-bottom: 4px;
+  font-weight: 600; text-transform: uppercase;
 }
 .room {
-  font-size: 1.35rem !important;
-  padding: 12px !important;
-  letter-spacing: 5px;
-  text-align: center;
-  font-family: monospace;
-  font-weight: 600;
+  font-size: 1.35rem !important; padding: 12px !important; letter-spacing: 5px;
+  text-align: center; font-family: monospace; font-weight: 600;
 }
-.err {
-  color: var(--red);
-  font-size: .8rem;
-  min-height: 1.2em;
-  margin-top: 8px;
-}
+.err { color: var(--red); font-size: .8rem; min-height: 1.2em; margin-top: 8px; }
 .stats {
-  position: absolute;
-  bottom: 8px;
-  left: 12px;
-  font-size: .7rem;
-  color: rgba(255,255,255,.5);
-  font-family: monospace;
-  pointer-events: none;
+  position: absolute; bottom: 8px; left: 12px; font-size: .7rem;
+  color: rgba(255,255,255,.5); font-family: monospace; pointer-events: none; z-index: 6;
 }
 .tip-bar {
-  background: var(--panel);
-  border-top: 1px solid var(--border);
-  padding: 6px 16px;
-  padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
-  font-size: .75rem;
-  color: var(--muted);
-  flex-shrink: 0;
+  background: var(--panel); border-top: 1px solid var(--border);
+  padding: 6px 16px; padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+  font-size: .75rem; color: var(--muted); flex-shrink: 0;
 }
 kbd {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  padding: 1px 5px;
-  font-size: .7rem;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 3px; padding: 1px 5px; font-size: .7rem;
 }
 
-/* ===== Mobile touch controls (only on touch devices) ===== */
+/* 触摸控件：仅 移动端 + 已出画 */
 .touch-layer {
-  display: none;
-  position: absolute;
-  inset: 0;
-  z-index: 20;
-  pointer-events: none;
+  display: none !important; position: absolute; inset: 0; z-index: 20; pointer-events: none;
 }
+html.is-mobile.is-connected .touch-layer { display: block !important; }
 .joy-zone, .btn-zone {
-  position: absolute;
-  bottom: calc(28px + env(safe-area-inset-bottom, 0px));
-  pointer-events: auto;
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
+  position: absolute; bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+  pointer-events: auto; touch-action: none;
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
 }
-.joy-zone {
-  left: 16px;
-  width: 148px;
-  height: 148px;
-  z-index: 21;
-}
+.joy-zone { left: 16px; width: 148px; height: 148px; z-index: 21; }
 .joy-base {
-  width: 148px;
-  height: 148px;
-  border-radius: 50%;
-  background: rgba(255,255,255,.16);
-  border: 2px solid rgba(255,255,255,.35);
+  width: 148px; height: 148px; border-radius: 50%;
+  background: rgba(255,255,255,.16); border: 2px solid rgba(255,255,255,.35);
   position: relative;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
 }
 .joy-stick {
-  width: 58px;
-  height: 58px;
-  border-radius: 50%;
-  background: rgba(59,130,246,.9);
-  border: 2px solid rgba(255,255,255,.55);
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 4px 14px rgba(0,0,0,.45);
-  pointer-events: none; /* 避免挡住 base 的触摸 */
+  width: 58px; height: 58px; border-radius: 50%;
+  background: rgba(59,130,246,.9); border: 2px solid rgba(255,255,255,.55);
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  pointer-events: none; box-shadow: 0 4px 14px rgba(0,0,0,.45);
 }
 .btn-zone {
-  right: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  align-items: flex-end;
-  z-index: 21;
+  right: 14px; display: flex; flex-direction: column; gap: 14px;
+  align-items: flex-end; z-index: 21;
 }
 .touch-btn {
-  width: 76px;
-  height: 76px;
-  border-radius: 50%;
-  border: 2px solid rgba(255,255,255,.35);
-  background: rgba(30,30,40,.72);
-  color: #fff;
-  font-size: .9rem;
-  font-weight: 700;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 14px rgba(0,0,0,.4);
-  pointer-events: auto;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
+  width: 76px; height: 76px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,.35); background: rgba(30,30,40,.72);
+  color: #fff; font-size: .9rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-tap-highlight-color: transparent; cursor: pointer;
 }
 .touch-btn:active, .touch-btn.active {
-  background: rgba(59,130,246,.85);
-  border-color: rgba(255,255,255,.7);
-  transform: scale(0.94);
+  background: rgba(59,130,246,.85); transform: scale(0.94);
 }
 .touch-btn.right-btn {
-  width: 68px;
-  height: 68px;
-  font-size: .8rem;
-  background: rgba(80,30,30,.75);
+  width: 68px; height: 68px; font-size: .8rem; background: rgba(80,30,30,.75);
 }
-.touch-btn.right-btn:active, .touch-btn.right-btn.active {
-  background: rgba(239,68,68,.8);
-}
-.touch-btn.scroll-btn {
-  width: 52px;
-  height: 42px;
-  border-radius: 12px;
-  font-size: .85rem;
-}
-.scroll-row {
-  display: flex;
-  gap: 10px;
-  pointer-events: auto;
-}
-
-/* 仅：移动端 + 已连接（能看到画面）后才显示操作控件 */
-.touch-layer { display: none !important; }
-html.is-mobile.is-connected .touch-layer { display: block !important; }
-html.is-desktop .touch-layer { display: none !important; }
-
+.touch-btn.right-btn:active, .touch-btn.right-btn.active { background: rgba(239,68,68,.8); }
+.touch-btn.scroll-btn { width: 52px; height: 42px; border-radius: 12px; font-size: .85rem; }
+.scroll-row { display: flex; gap: 10px; }
 </style>
 </head>
 <body>
@@ -309,7 +149,7 @@ html.is-desktop .touch-layer { display: none !important; }
   <div class="overlay" id="overlay">
     <div class="overlay-card">
       <h2>连接远程电脑</h2>
-      <p>在被控电脑运行 <code>server.py</code> 并输入房间码后，在此填写<strong>相同房间码</strong>连接。</p>
+      <p>被控端运行 <code>server.py</code> 并输入房间码后，在此填写<strong>相同房间码</strong>。</p>
       <div class="field">
         <label>信令服务器</label>
         <input class="input" id="wsUrl" value="wss://wss.getlost.ovh" readonly>
@@ -323,12 +163,9 @@ html.is-desktop .touch-layer { display: none !important; }
     </div>
   </div>
   <canvas id="screen" width="1280" height="720"></canvas>
-  
   <div class="touch-layer" id="touchLayer">
     <div class="joy-zone" id="joyZone">
-      <div class="joy-base" id="joyBase">
-        <div class="joy-stick" id="joyStick"></div>
-      </div>
+      <div class="joy-base" id="joyBase"><div class="joy-stick" id="joyStick"></div></div>
     </div>
     <div class="btn-zone">
       <div class="scroll-row">
@@ -339,200 +176,103 @@ html.is-desktop .touch-layer { display: none !important; }
       <button type="button" class="touch-btn" id="btnLeft">左键</button>
     </div>
   </div>
-
   <div class="stats" id="stats"></div>
 </div>
 
 <div class="tip-bar">
-  手机：左下摇杆移动鼠标 · 右下左键/右键 · 点屏幕也可定位 · <kbd>Esc</kbd> 紧急断开
+  双通道：画面 / 控制分离 · 手机出画后显示摇杆 · <kbd>Esc</kbd> 紧急断开
 </div>
 
 <script>
 const $ = id => document.getElementById(id);
+const SIGNALING = 'wss://wss.getlost.ovh';
+const uid = Math.random().toString(36).slice(2, 9);
+const ID_VIEW = 'view-' + uid;   // 收画面
+const ID_PAD  = 'pad-' + uid;    // 发控制
 
-/* iPhone / iPad / Android 检测：强制显示触摸控件 */
 (function detectMobile() {
   const ua = navigator.userAgent || '';
   const touch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
   const mobileUA = /iPhone|iPad|iPod|Android|Mobile/i.test(ua);
-  // iPadOS 13+ 可能伪装成 Mac
   const iPadOS = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
   const isMobile = mobileUA || iPadOS || (touch && Math.min(screen.width, screen.height) <= 900);
-  if (isMobile) document.documentElement.classList.add('is-mobile');
-  else document.documentElement.classList.add('is-desktop');
-
-  // 阻止 iOS 双击缩放、手势缩放
-  document.addEventListener('gesturestart', function (e) { e.preventDefault(); }, { passive: false });
-  let lastTouchEnd = 0;
-  document.addEventListener('touchend', function (e) {
-    const now = Date.now();
-    if (now - lastTouchEnd <= 300) e.preventDefault();
-    lastTouchEnd = now;
-  }, { passive: false });
+  document.documentElement.classList.add(isMobile ? 'is-mobile' : 'is-desktop');
+  document.addEventListener('gesturestart', e => e.preventDefault(), { passive: false });
 })();
 
-const statusEl = $('status');
-const wsUrlInput = $('wsUrl');
-const roomInput = $('roomCode');
-const connectBtn = $('connectBtn');
-const disconnectBtn = $('disconnectBtn');
-const fullscreenBtn = $('fullscreenBtn');
-const main = $('main');
-const overlay = $('overlay');
-const errMsg = $('errMsg');
-const canvas = $('screen');
-const ctx = canvas.getContext('2d');
+const statusEl = $('status'), roomInput = $('roomCode'), connectBtn = $('connectBtn');
+const disconnectBtn = $('disconnectBtn'), main = $('main'), overlay = $('overlay');
+const errMsg = $('errMsg'), canvas = $('screen'), ctx = canvas.getContext('2d');
 const statsEl = $('stats');
 
-/* ===== 固定信令（与文件传输项目一致）===== */
-const SIGNALING_URL = 'wss://wss.getlost.ovh';
-const PLAYER_ID = 'ctrl-' + Math.random().toString(36).slice(2, 10);
-const KEEP_ALIVE_MS = 8000;
-const RECONNECT_BASE_MS = 1500;
-const RECONNECT_MAX_MS = 12000;
-const DISCONNECT_GRACE_MS = 18000;
-const CONNECT_TIMEOUT_MS = 20000;
-const MOUSE_THROTTLE = 40;
-
-let ws = null;
-let meta = { width: 1920, height: 1080, scale: 0.45 };
-let connected = false;
-let hasFrame = false; // 已收到至少一帧画面
-let wantConnected = false;   // 用户希望保持连接（用于自动重连）
+let wsMedia = null, wsCtrl = null;
+let meta = { width: 1920, height: 1080, scale: 0.4 };
+let connected = false, hasFrame = false, wantConnected = false;
 let currentRoom = '';
-let hostId = '';
-let frames = 0;
-let lastFpsTime = performance.now();
-let fps = 0;
-let lastMouseSend = 0;
-let lastFrameAt = 0;
-let keepAliveTimer = null;
-let reconnectTimer = null;
-let disconnectTimer = null;
-let connectTimeout = null;
-let reconnectAttempt = 0;
+let hostMediaId = '', hostCtrlId = '';
+let frames = 0, fps = 0, lastFpsTime = performance.now();
 let intentionalClose = false;
+let keepAliveTimer = null, reconnectTimer = null, connectTimeout = null;
+let reconnectAttempt = 0;
+let lastMouseSend = 0;
 
-// 强制使用公网信令，清掉旧版缓存的 127.0.0.1 / localhost
-(function initUrl() {
-  wsUrlInput.value = SIGNALING_URL;
-  localStorage.setItem('remote_ws_url', SIGNALING_URL);
-  const savedRoom = localStorage.getItem('remote_room') || '';
-  // 忽略以前误存的本地地址相关房间也可保留房间码
-  roomInput.value = savedRoom;
-})();
+roomInput.value = localStorage.getItem('remote_room') || '';
+$('wsUrl').value = SIGNALING;
 
-function setStatus(text, cls) {
-  statusEl.textContent = text;
-  statusEl.className = 'status ' + (cls || '');
-}
-function setError(msg) {
-  errMsg.textContent = msg || '';
+function setStatus(t, c) { statusEl.textContent = t; statusEl.className = 'status ' + (c || ''); }
+function setError(m) { errMsg.textContent = m || ''; }
+function setConnectedUI(on) {
+  document.documentElement.classList.toggle('is-connected', !!on);
 }
 
 function clearTimers() {
-  if (keepAliveTimer) { clearInterval(keepAliveTimer); keepAliveTimer = null; }
-  if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
-  if (disconnectTimer) { clearTimeout(disconnectTimer); disconnectTimer = null; }
-  if (connectTimeout) { clearTimeout(connectTimeout); connectTimeout = null; }
-}
-
-function cancelDisconnectTimer() {
-  if (disconnectTimer) {
-    clearTimeout(disconnectTimer);
-    disconnectTimer = null;
-  }
-}
-
-function startKeepAlive() {
+  [keepAliveTimer, reconnectTimer, connectTimeout].forEach(t => { if (t) clearTimeout(t); });
   if (keepAliveTimer) clearInterval(keepAliveTimer);
-  keepAliveTimer = setInterval(() => {
-    if (ws && ws.readyState === 1) {
-      try {
-        ws.send(JSON.stringify({
-          kind: 'ping',
-          roomId: currentRoom,
-          from: PLAYER_ID,
-          to: hostId || undefined,
-          payload: { t: Date.now() }
-        }));
-      } catch {}
-    }
-  }, KEEP_ALIVE_MS);
+  keepAliveTimer = reconnectTimer = connectTimeout = null;
 }
 
-function scheduleReconnect() {
-  if (!wantConnected || intentionalClose) return;
-  if (reconnectTimer) return;
-  const delay = Math.min(RECONNECT_MAX_MS, RECONNECT_BASE_MS * Math.pow(1.6, reconnectAttempt));
-  reconnectAttempt++;
-  setStatus('重连中…', 'connecting');
-  setError('连接中断，正在重连 (' + reconnectAttempt + ')…');
-  reconnectTimer = setTimeout(() => {
-    reconnectTimer = null;
-    if (wantConnected && !intentionalClose) connect(true);
-  }, delay);
-}
-
-function scheduleDisconnectGrace(reason) {
-  if (disconnectTimer) return;
-  disconnectTimer = setTimeout(() => {
-    disconnectTimer = null;
-    if (connected && ws && ws.readyState === 1) return;
-    // 宽限期后仍未恢复 → 进入重连
-    connected = false;
-    hostId = '';
-    setStatus('连接中断', 'offline');
-    scheduleReconnect();
-  }, DISCONNECT_GRACE_MS);
-}
-
-function sendSignal(kind, payload, to) {
-  if (!ws || ws.readyState !== 1) return;
-  const msg = { kind, roomId: currentRoom, from: PLAYER_ID };
+function sendOn(ws, kind, from, payload, to) {
+  if (!ws || ws.readyState !== 1) return false;
+  const msg = { kind, roomId: currentRoom, from };
   if (to) msg.to = to;
   if (payload !== undefined) msg.payload = payload;
-  try { ws.send(JSON.stringify(msg)); } catch {}
+  try { ws.send(JSON.stringify(msg)); return true; } catch { return false; }
 }
 
-function setConnectedUI(on) {
-  if (on) document.documentElement.classList.add('is-connected');
-  else document.documentElement.classList.remove('is-connected');
+function sendInput(obj) {
+  if (!wsCtrl || wsCtrl.readyState !== 1) return;
+  if (!hasFrame && !connected) return;
+  const payload = Object.assign({ t: Date.now() }, obj);
+  // 控制通道专用：定向 host-c + 广播
+  if (hostCtrlId) sendOn(wsCtrl, 'ctrl', ID_PAD, payload, hostCtrlId);
+  sendOn(wsCtrl, 'ctrl', ID_PAD, payload, undefined);
+  sendOn(wsCtrl, 'input', ID_PAD, payload, hostCtrlId || undefined);
 }
 
-function markConnected(fromId, opts) {
-  opts = opts || {};
-  if (fromId) hostId = String(fromId);
-  const was = connected;
+function markReady() {
   connected = true;
   reconnectAttempt = 0;
-  cancelDisconnectTimer();
-  setStatus(opts.status || 'Connected', '');
+  setStatus('Connected', '');
   connectBtn.disabled = false;
   connectBtn.textContent = 'Connect';
   disconnectBtn.disabled = false;
   overlay.classList.add('hidden');
   main.classList.remove('idle');
   setError('');
-  startKeepAlive();
-  // 只有真正收到过画面才显示手机操作控件
   if (hasFrame) setConnectedUI(true);
-  if (!was) {
-    try { canvas.focus(); } catch (e) {}
-  }
+  startKeepAlive();
 }
 
 function hardDisconnect(reason, allowReconnect) {
   clearTimers();
   connected = false;
-  hostId = '';
   hasFrame = false;
+  hostMediaId = hostCtrlId = '';
   setConnectedUI(false);
-  if (ws) {
-    intentionalClose = !allowReconnect;
-    try { ws.close(); } catch {}
-    ws = null;
-  }
+  intentionalClose = !allowReconnect;
+  try { wsMedia && wsMedia.close(); } catch {}
+  try { wsCtrl && wsCtrl.close(); } catch {}
+  wsMedia = wsCtrl = null;
   setStatus(reason || 'Offline', 'offline');
   connectBtn.disabled = false;
   connectBtn.textContent = 'Connect';
@@ -544,551 +284,367 @@ function hardDisconnect(reason, allowReconnect) {
 }
 
 function disconnect(reason) {
-  // 用户主动断开 / Esc
   wantConnected = false;
   intentionalClose = true;
   hardDisconnect(reason || '已断开', false);
 }
 
-function connect(isRetry) {
+function scheduleReconnect() {
+  if (!wantConnected || intentionalClose || reconnectTimer) return;
+  const delay = Math.min(12000, 1500 * Math.pow(1.5, reconnectAttempt++));
+  setStatus('重连中…', 'connecting');
+  reconnectTimer = setTimeout(() => { reconnectTimer = null; connect(true); }, delay);
+}
+
+function startKeepAlive() {
+  if (keepAliveTimer) clearInterval(keepAliveTimer);
+  keepAliveTimer = setInterval(() => {
+    sendOn(wsCtrl, 'ping', ID_PAD, { t: Date.now() }, hostCtrlId || undefined);
+    sendOn(wsMedia, 'ping', ID_VIEW, { t: Date.now() }, hostMediaId || undefined);
+  }, 8000);
+}
+
+function openSocket(url, fromId, onMsg) {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const ws = new WebSocket(url);
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ kind: 'register', roomId: currentRoom, from: fromId, announce: true }));
+      if (!settled) { settled = true; resolve(ws); }
+    };
+    ws.onerror = () => { if (!settled) { settled = true; reject(new Error('ws error')); } };
+    ws.onmessage = onMsg;
+    ws.onclose = () => {
+      if (!intentionalClose && wantConnected) scheduleReconnect();
+    };
+  });
+}
+
+function handleRoster(m, role) {
+  const roster = m.roster || [];
+  const others = roster.filter(id => id !== ID_VIEW && id !== ID_PAD);
+  if (role === 'media') {
+    const hid = others.find(id => String(id).startsWith('host-m-')) ||
+                others.find(id => String(id).startsWith('host-m')) ||
+                others.find(id => String(id).startsWith('host-'));
+    if (hid) hostMediaId = String(hid);
+  } else {
+    const hid = others.find(id => String(id).startsWith('host-c-')) ||
+                others.find(id => String(id).startsWith('host-c')) ||
+                others.find(id => String(id).startsWith('host-'));
+    if (hid) hostCtrlId = String(hid);
+  }
+  if (hostMediaId && hostCtrlId && !hasFrame) {
+    setStatus('等待画面…', 'connecting');
+    overlay.classList.add('hidden');
+    main.classList.remove('idle');
+    disconnectBtn.disabled = false;
+  }
+}
+
+function onMediaMessage(ev) {
+  if (typeof ev.data !== 'string') return;
+  let m; try { m = JSON.parse(ev.data); } catch { return; }
+  if (m.sys === 'roster') { handleRoster(m, 'media'); return; }
+  if (m.from === ID_VIEW || m.from === ID_PAD) return;
+  if (m.from && String(m.from).startsWith('host-m')) hostMediaId = String(m.from);
+  if (m.from && String(m.from).startsWith('host-')) hostMediaId = hostMediaId || String(m.from);
+
+  if (m.kind === 'meta') {
+    const p = m.payload || {};
+    if (p.width) meta.width = p.width;
+    if (p.height) meta.height = p.height;
+    if (p.scale) meta.scale = p.scale;
+    return;
+  }
+  if (m.kind !== 'frame') return;
+  const p = m.payload || {};
+  if (p.width) meta.width = p.width;
+  if (p.height) meta.height = p.height;
+  if (p.scale) meta.scale = p.scale;
+  if (!p.data) return;
+  let arr;
+  try {
+    const bin = atob(p.data);
+    arr = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  } catch { return; }
+  const url = URL.createObjectURL(new Blob([arr], { type: 'image/jpeg' }));
+  const img = new Image();
+  img.onload = () => {
+    if (canvas.width !== img.width || canvas.height !== img.height) {
+      canvas.width = img.width; canvas.height = img.height;
+    }
+    ctx.drawImage(img, 0, 0);
+    URL.revokeObjectURL(url);
+    frames++;
+    const now = performance.now();
+    if (now - lastFpsTime >= 1000) {
+      fps = frames; frames = 0; lastFpsTime = now;
+      statsEl.textContent = fps + ' FPS · ' + canvas.width + '×' + canvas.height +
+        ' · ctrl:' + (wsCtrl && wsCtrl.readyState === 1 ? 'on' : 'off');
+    }
+    if (!hasFrame) {
+      hasFrame = true;
+      markReady();
+    } else {
+      setConnectedUI(true);
+      connected = true;
+    }
+  };
+  img.onerror = () => URL.revokeObjectURL(url);
+  img.src = url;
+}
+
+function onCtrlMessage(ev) {
+  if (typeof ev.data !== 'string') return;
+  let m; try { m = JSON.parse(ev.data); } catch { return; }
+  if (m.sys === 'roster') { handleRoster(m, 'ctrl'); return; }
+  if (m.from && String(m.from).startsWith('host-c')) hostCtrlId = String(m.from);
+  if (m.from && String(m.from).startsWith('host-') && !hostCtrlId) hostCtrlId = String(m.from);
+}
+
+async function connect(isRetry) {
   intentionalClose = false;
   wantConnected = true;
   clearTimers();
+  try { wsMedia && wsMedia.close(); } catch {}
+  try { wsCtrl && wsCtrl.close(); } catch {}
+  wsMedia = wsCtrl = null;
+  hasFrame = false;
+  setConnectedUI(false);
+  hostMediaId = hostCtrlId = '';
 
-  if (ws) {
-    try { ws.close(); } catch {}
-    ws = null;
-  }
-
-  const url = SIGNALING_URL; // 强制公网信令
-  wsUrlInput.value = url;
   const room = roomInput.value.trim();
   if (!room || room.length < 4) {
     setError('请输入至少4位房间码');
-    roomInput.focus();
     wantConnected = false;
     return;
   }
-
-  localStorage.setItem('remote_ws_url', SIGNALING_URL);
   localStorage.setItem('remote_room', room);
   currentRoom = room;
-  hasFrame = false;
-  setConnectedUI(false);
-  hostId = '';
   setError(isRetry ? '正在重连…' : '');
   setStatus(isRetry ? '重连中…' : 'Connecting…', 'connecting');
   connectBtn.disabled = true;
   connectBtn.textContent = 'Connecting…';
 
-  try {
-    ws = new WebSocket(url);
-  } catch (e) {
-    hardDisconnect('连接失败', true);
-    return;
-  }
-
   connectTimeout = setTimeout(() => {
-    if (!connected) hardDisconnect('连接失败', true);
-  }, CONNECT_TIMEOUT_MS);
+    if (!hasFrame) hardDisconnect('连接失败', true);
+  }, 25000);
 
-  ws.onopen = () => {
-    ws.send(JSON.stringify({
-      kind: 'register',
-      roomId: currentRoom,
-      from: PLAYER_ID,
-      announce: true
-    }));
+  try {
+    wsMedia = await openSocket(SIGNALING, ID_VIEW, onMediaMessage);
+    wsCtrl  = await openSocket(SIGNALING, ID_PAD, onCtrlMessage);
     setStatus('等待主机…', 'connecting');
     startKeepAlive();
-  };
-
-  ws.onclose = () => {
-    clearTimeout(connectTimeout);
-    connectTimeout = null;
-    if (keepAliveTimer) { clearInterval(keepAliveTimer); keepAliveTimer = null; }
-    ws = null;
-    if (intentionalClose) {
-      connected = false;
-      return;
-    }
-    if (connected) {
-      // 已连上过：先宽限，再重连（家庭 WiFi / 切后台常见）
-      connected = false;
-      setStatus('连接中断', 'offline');
-      scheduleDisconnectGrace('信令断开');
-      scheduleReconnect();
-    } else {
-      hardDisconnect('连接失败', true);
-    }
-  };
-
-  ws.onerror = () => {
-    // onclose 会接着处理
-    if (!connected) setError('连接失败');
-  };
-
-  ws.onmessage = (ev) => {
-    if (typeof ev.data !== 'string') return;
-    let m;
-    try { m = JSON.parse(ev.data); } catch { return; }
-
-    if (m.sys === 'error' || m.type === 'error') {
-      hardDisconnect('连接失败', false);
-      wantConnected = false;
-      return;
-    }
-
-    // 心跳回包
-    if (m.kind === 'pong' || m.kind === 'ping') {
-      cancelDisconnectTimer();
-      return;
-    }
-
-    if (m.sys === 'roster') {
-      const roster = m.roster || [];
-      const others = roster.filter(id => id !== PLAYER_ID);
-      if (!others.length) {
-        if (hasFrame || connected) {
-          scheduleDisconnectGrace('主机离开房间');
-        } else {
-          setStatus('等待主机…', 'connecting');
-        }
-        return;
-      }
-      // 优先 host-*，保证输入发到被控端
-      const hid = others.find(id => String(id).startsWith('host-')) || others.find(id => String(id).startsWith('host')) || others[0];
-      hostId = hid;
-      if (hid) lastHostFrom = String(hid);
-      cancelDisconnectTimer();
-      clearTimeout(connectTimeout);
-      if (!hasFrame) {
-        // 已发现主机，但还没画面：不显示操作控件
-        connected = true; // 允许随后收帧；输入等有画面更稳
-        setStatus('等待画面…', 'connecting');
-        overlay.classList.add('hidden');
-        main.classList.remove('idle');
-        startKeepAlive();
-        disconnectBtn.disabled = false;
-        connectBtn.disabled = false;
-        connectBtn.textContent = 'Connect';
-      } else {
-        markConnected(hostId);
-      }
-      return;
-    }
-
-    if (m.from === PLAYER_ID) return;
-
-    const kind = m.kind;
-    if (kind === 'meta') {
-      const p = m.payload || {};
-      if (p.width) meta.width = p.width;
-      if (p.height) meta.height = p.height;
-      if (p.scale) meta.scale = p.scale;
-      if (m.from) { hostId = String(m.from); lastHostFrom = hostId; }
-      return;
-    }
-
-    if (kind === 'frame') {
-      const p = m.payload || {};
-      if (p.width) meta.width = p.width;
-      if (p.height) meta.height = p.height;
-      if (p.scale) meta.scale = p.scale;
-      if (m.from) { hostId = String(m.from); lastHostFrom = hostId; }
-      if (!p.data) return;
-
-      lastFrameAt = Date.now();
-      cancelDisconnectTimer();
-      clearTimeout(connectTimeout);
-
-      let arr;
-      try {
-        const bin = atob(p.data);
-        arr = new Uint8Array(bin.length);
-        for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-      } catch (err) {
-        console.warn('frame decode error', err);
-        return;
-      }
-      const blob = new Blob([arr], { type: 'image/jpeg' });
-      const url = URL.createObjectURL(blob);
-      const img = new Image();
-      img.onload = () => {
-        if (canvas.width !== img.width || canvas.height !== img.height) {
-          canvas.width = img.width;
-          canvas.height = img.height;
-        }
-        ctx.drawImage(img, 0, 0);
-        URL.revokeObjectURL(url);
-        frames++;
-        const now = performance.now();
-        if (now - lastFpsTime >= 1000) {
-          fps = frames;
-          frames = 0;
-          lastFpsTime = now;
-          statsEl.textContent = fps + ' FPS · ' + canvas.width + '×' + canvas.height + ' · remote ' + meta.width + '×' + meta.height;
-        }
-        // 画面出来后才算真正可操作
-        if (!hasFrame) {
-          hasFrame = true;
-          markConnected(hostId || m.from, { status: 'Connected' });
-        } else {
-          if (hostId) setConnectedUI(true);
-          connected = true;
-        }
-      };
-      img.onerror = () => {
-        URL.revokeObjectURL(url);
-      };
-      img.src = url;
-      return;
-    }
-  };
+  } catch (e) {
+    hardDisconnect('连接失败', true);
+  }
 }
 
-connectBtn.addEventListener('click', () => connect(false));
-disconnectBtn.addEventListener('click', () => disconnect('已断开'));
+connectBtn.onclick = () => connect(false);
+disconnectBtn.onclick = () => disconnect('已断开');
 roomInput.addEventListener('keydown', e => { if (e.key === 'Enter') connect(false); });
-
-fullscreenBtn.addEventListener('click', () => {
+$('fullscreenBtn').onclick = () => {
   if (!document.fullscreenElement) main.requestFullscreen?.();
   else document.exitFullscreen?.();
-});
+};
 
 function canvasToRemote(e) {
   const rect = canvas.getBoundingClientRect();
-  const scaleX = canvas.width / rect.width;
-  const scaleY = canvas.height / rect.height;
-  const cx = (e.clientX - rect.left) * scaleX;
-  const cy = (e.clientY - rect.top) * scaleY;
-  return {
-    x: Math.round(cx / meta.scale),
-    y: Math.round(cy / meta.scale)
-  };
+  const cx = (e.clientX - rect.left) * (canvas.width / rect.width);
+  const cy = (e.clientY - rect.top) * (canvas.height / rect.height);
+  return { x: Math.round(cx / (meta.scale || 0.4)), y: Math.round(cy / (meta.scale || 0.4)) };
 }
 
-function sendInput(obj) {
-  if (!ws || ws.readyState !== 1) return;
-  if (!connected && !hasFrame) return;
-  // 保证有目标：优先 hostId，否则用最近一帧来源
-  const target = hostId || lastHostFrom || '';
-  const payload = Object.assign({ t: Date.now() }, obj);
-  // 双通道：ctrl（新）+ input（旧）；带 to 与不带 to 各发一次，避免信令丢定向包
-  try {
-    if (target) {
-      sendSignal('ctrl', payload, target);
-      sendSignal('input', payload, target);
-    }
-    // 房间广播兜底（部分信令对未知 kind 只做房间转发）
-    sendSignal('ctrl', payload, undefined);
-    sendSignal('input', payload, undefined);
-  } catch (e) {
-    console.warn('sendInput', e);
-  }
-}
-
-canvas.addEventListener('mousemove', (e) => {
-  if (!connected) return;
+canvas.addEventListener('mousemove', e => {
+  if (!hasFrame) return;
   const now = performance.now();
-  if (now - lastMouseSend < MOUSE_THROTTLE) return;
+  if (now - lastMouseSend < 30) return;
   lastMouseSend = now;
   const { x, y } = canvasToRemote(e);
+  curX = x; curY = y;
   sendInput({ type: 'mouse', x, y });
 });
-
-canvas.addEventListener('mousedown', (e) => {
-  if (!connected) return;
+canvas.addEventListener('mousedown', e => {
+  if (!hasFrame) return;
   e.preventDefault();
   const { x, y } = canvasToRemote(e);
+  curX = x; curY = y;
   const button = e.button === 2 ? 'right' : e.button === 1 ? 'middle' : 'left';
   sendInput({ type: 'click', x, y, button, clicks: 1 });
 });
-
-canvas.addEventListener('dblclick', (e) => {
-  if (!connected) return;
-  e.preventDefault();
-  const { x, y } = canvasToRemote(e);
-  sendInput({ type: 'click', x, y, button: 'left', clicks: 2 });
-});
-
 canvas.addEventListener('contextmenu', e => e.preventDefault());
-
-canvas.addEventListener('wheel', (e) => {
-  if (!connected) return;
+canvas.addEventListener('wheel', e => {
+  if (!hasFrame) return;
   e.preventDefault();
   sendInput({ type: 'scroll', dy: e.deltaY > 0 ? -3 : 3 });
 }, { passive: false });
 
-/* Esc = 紧急断开（与文件传输项目的明确用户意图一致）*/
-window.addEventListener('keydown', (e) => {
+window.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     e.preventDefault();
-    e.stopPropagation();
-    if (wantConnected || connected || (ws && ws.readyState === 1)) {
-      disconnect('紧急断开');
-    }
+    if (wantConnected || connected) disconnect('紧急断开');
     return;
   }
-  if (!connected) return;
-  if (e.target === wsUrlInput || e.target === roomInput) return;
+  if (!hasFrame || e.target === roomInput) return;
   e.preventDefault();
   sendInput({ type: 'keydown', key: e.key });
 }, true);
-
-window.addEventListener('keyup', (e) => {
-  if (e.key === 'Escape') return;
-  if (!connected) return;
-  if (e.target === wsUrlInput || e.target === roomInput) return;
+window.addEventListener('keyup', e => {
+  if (e.key === 'Escape' || !hasFrame || e.target === roomInput) return;
   e.preventDefault();
   sendInput({ type: 'keyup', key: e.key });
 }, true);
 
-/* 后台/前台恢复（对齐 web1 文件传输）*/
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) return;
-  // 回到前台：立即 ping，必要时重连
-  if (ws && ws.readyState === 1) {
-    try {
-      ws.send(JSON.stringify({
-        kind: 'ping',
-        roomId: currentRoom,
-        from: PLAYER_ID,
-        to: hostId || undefined,
-        payload: { t: Date.now(), resume: true }
-      }));
-    } catch {}
-    cancelDisconnectTimer();
-  } else if (wantConnected && !intentionalClose) {
-    scheduleReconnect();
-  }
+  if (!document.hidden && wantConnected && (!wsMedia || wsMedia.readyState !== 1)) scheduleReconnect();
 });
-
 window.addEventListener('online', () => {
-  if (wantConnected && (!ws || ws.readyState !== 1)) scheduleReconnect();
+  if (wantConnected && (!wsCtrl || wsCtrl.readyState !== 1)) scheduleReconnect();
 });
 
-window.addEventListener('pagehide', () => {
-  if (ws && ws.readyState === 1) {
-    try {
-      ws.send(JSON.stringify({
-        kind: 'ping',
-        roomId: currentRoom,
-        from: PLAYER_ID,
-        payload: { t: Date.now(), pagehide: true }
-      }));
-    } catch {}
+/* ===== 手机摇杆：多指互不干扰，点按键不归位摇杆 ===== */
+let curX = 960, curY = 540;
+(function setupTouch() {
+  const joyBase = $('joyBase'), joyStick = $('joyStick');
+  const btnLeft = $('btnLeft'), btnRight = $('btnRight');
+  const scrollUp = $('scrollUp'), scrollDown = $('scrollDown');
+  if (!joyBase) return;
+
+  let joyTouchId = null;
+  let joyDX = 0, joyDY = 0, joyRaf = null;
+  const JOY_MAX = 52, JOY_SPEED = 16;
+
+  function clamp() {
+    curX = Math.max(0, Math.min((meta.width || 1920) - 1, curX));
+    curY = Math.max(0, Math.min((meta.height || 1080) - 1, curY));
   }
-});
-
-/* ===== Mobile virtual joystick + mouse buttons ===== */
-(function setupTouchControls() {
-  const touchLayer = document.getElementById('touchLayer');
-  const joyZone = document.getElementById('joyZone');
-  const joyBase = document.getElementById('joyBase');
-  const joyStick = document.getElementById('joyStick');
-  const btnLeft = document.getElementById('btnLeft');
-  const btnRight = document.getElementById('btnRight');
-  const scrollUp = document.getElementById('scrollUp');
-  const scrollDown = document.getElementById('scrollDown');
-  if (!joyBase || !btnLeft) return;
-
-  let curX = 960;
-  let curY = 540;
-  let joyActive = false;
-  let joyDX = 0, joyDY = 0;
-  let joyRaf = null;
-  const JOY_MAX = 52;
-  const JOY_SPEED = 16;
-
-  function remoteW() { return meta.width || 1920; }
-  function remoteH() { return meta.height || 1080; }
-
-  function clampCursor() {
-    curX = Math.max(0, Math.min(remoteW() - 1, curX));
-    curY = Math.max(0, Math.min(remoteH() - 1, curY));
-  }
-
-  function sendMousePos() {
-    if (!connected) return;
-    clampCursor();
+  function sendPos() {
+    clamp();
     sendInput({ type: 'mouse', x: Math.round(curX), y: Math.round(curY) });
   }
-
-  function joyLoop() {
-    if (!joyActive) { joyRaf = null; return; }
+  function loop() {
+    if (joyTouchId === null) { joyRaf = null; return; }
     if (Math.abs(joyDX) > 0.04 || Math.abs(joyDY) > 0.04) {
       curX += joyDX * JOY_SPEED;
       curY += joyDY * JOY_SPEED;
-      sendMousePos();
+      sendPos();
     }
-    joyRaf = requestAnimationFrame(joyLoop);
+    joyRaf = requestAnimationFrame(loop);
   }
-
   function setStick(dx, dy) {
     const mag = Math.hypot(dx, dy) || 1;
     const c = Math.min(1, mag);
-    const nx = (dx / mag) * c;
-    const ny = (dy / mag) * c;
-    joyDX = nx;
-    joyDY = ny;
-    joyStick.style.transform =
-      'translate(calc(-50% + ' + (nx * JOY_MAX) + 'px), calc(-50% + ' + (ny * JOY_MAX) + 'px))';
+    joyDX = (dx / mag) * c;
+    joyDY = (dy / mag) * c;
+    joyStick.style.transform = 'translate(calc(-50% + ' + (joyDX * JOY_MAX) + 'px), calc(-50% + ' + (joyDY * JOY_MAX) + 'px))';
   }
-
-  function resetStick() {
-    joyDX = 0;
-    joyDY = 0;
-    joyActive = false;
+  function endJoy() {
+    joyTouchId = null;
+    joyDX = joyDY = 0;
     joyStick.style.transform = 'translate(-50%, -50%)';
   }
-
-  function clientPoint(e) {
-    if (e.touches && e.touches.length) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    if (e.changedTouches && e.changedTouches.length) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
-    return { x: e.clientX, y: e.clientY };
+  function point(e, id) {
+    const touches = e.touches || e.changedTouches;
+    if (touches) {
+      for (let i = 0; i < touches.length; i++) {
+        if (id == null || touches[i].identifier === id) return touches[i];
+      }
+    }
+    return e;
   }
-
-  function joyFromEvent(e) {
-    const p = clientPoint(e);
+  function joyVec(e, id) {
+    const t = point(e, id);
+    if (!t) return { dx: 0, dy: 0 };
     const rect = joyBase.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-    return { dx: (p.x - cx) / JOY_MAX, dy: (p.y - cy) / JOY_MAX };
+    return {
+      dx: (t.clientX - (rect.left + rect.width / 2)) / JOY_MAX,
+      dy: (t.clientY - (rect.top + rect.height / 2)) / JOY_MAX
+    };
   }
 
-  function onJoyMove(e) {
-    if (!joyActive) return;
-    e.preventDefault();
-    const { dx, dy } = joyFromEvent(e);
-    setStick(dx, dy);
-  }
-
-  function onJoyEnd(e) {
-    if (!joyActive) return;
-    e.preventDefault();
-    window.removeEventListener('touchmove', onJoyMove, true);
-    window.removeEventListener('touchend', onJoyEnd, true);
-    window.removeEventListener('touchcancel', onJoyEnd, true);
-    window.removeEventListener('mousemove', onJoyMove, true);
-    window.removeEventListener('mouseup', onJoyEnd, true);
-    resetStick();
-  }
-
-  function onJoyStart(e) {
+  joyBase.addEventListener('touchstart', e => {
+    if (!hasFrame) return;
+    // 只认第一根用于摇杆的手指
+    if (joyTouchId !== null) return;
+    const t = e.changedTouches[0];
+    joyTouchId = t.identifier;
     e.preventDefault();
     e.stopPropagation();
-    if (!connected) return;
-    // center cursor roughly if still default
-    joyActive = true;
-    const { dx, dy } = joyFromEvent(e);
-    setStick(dx, dy);
-    // 在 window 上跟踪，拖出圆盘也能继续动
-    window.addEventListener('touchmove', onJoyMove, { passive: false, capture: true });
-    window.addEventListener('touchend', onJoyEnd, { passive: false, capture: true });
-    window.addEventListener('touchcancel', onJoyEnd, { passive: false, capture: true });
-    window.addEventListener('mousemove', onJoyMove, true);
-    window.addEventListener('mouseup', onJoyEnd, true);
-    if (!joyRaf) joyRaf = requestAnimationFrame(joyLoop);
-  }
+    setStick(joyVec(e, joyTouchId).dx, joyVec(e, joyTouchId).dy);
+    if (!joyRaf) joyRaf = requestAnimationFrame(loop);
+  }, { passive: false });
 
-  joyZone.addEventListener('touchstart', onJoyStart, { passive: false });
-  joyBase.addEventListener('touchstart', onJoyStart, { passive: false });
-  joyZone.addEventListener('mousedown', onJoyStart);
+  window.addEventListener('touchmove', e => {
+    if (joyTouchId === null) return;
+    let found = false;
+    for (let i = 0; i < e.touches.length; i++) {
+      if (e.touches[i].identifier === joyTouchId) { found = true; break; }
+    }
+    if (!found) return;
+    e.preventDefault();
+    const v = joyVec(e, joyTouchId);
+    setStick(v.dx, v.dy);
+  }, { passive: false, capture: true });
 
-  function bindHoldBtn(el, button) {
-    function fire(e) {
+  window.addEventListener('touchend', e => {
+    if (joyTouchId === null) return;
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      if (e.changedTouches[i].identifier === joyTouchId) {
+        endJoy();
+        break;
+      }
+    }
+  }, { capture: true });
+  window.addEventListener('touchcancel', e => {
+    if (joyTouchId === null) return;
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      if (e.changedTouches[i].identifier === joyTouchId) endJoy();
+    }
+  }, { capture: true });
+
+  function bindBtn(el, button) {
+    const fire = e => {
       e.preventDefault();
       e.stopPropagation();
-      if (!connected) return;
+      if (!hasFrame) return;
       el.classList.add('active');
-      clampCursor();
-      // 若还没收到 meta，用画面中心
-      if (!meta.width) { curX = 960; curY = 540; }
-      sendInput({
-        type: 'click',
-        x: Math.round(curX),
-        y: Math.round(curY),
-        button: button,
-        clicks: 1
-      });
-    }
-    function release(e) {
-      if (e) e.preventDefault();
-      el.classList.remove('active');
-    }
+      // 点击不改变摇杆状态，只用当前光标位置
+      clamp();
+      sendInput({ type: 'click', x: Math.round(curX), y: Math.round(curY), button, clicks: 1 });
+    };
+    const up = e => { if (e) e.preventDefault(); el.classList.remove('active'); };
     el.addEventListener('touchstart', fire, { passive: false });
-    el.addEventListener('touchend', release, { passive: false });
-    el.addEventListener('touchcancel', release, { passive: false });
+    el.addEventListener('touchend', up, { passive: false });
+    el.addEventListener('touchcancel', up, { passive: false });
     el.addEventListener('mousedown', fire);
-    el.addEventListener('mouseup', release);
-    el.addEventListener('mouseleave', release);
+    el.addEventListener('mouseup', up);
   }
-  bindHoldBtn(btnLeft, 'left');
-  bindHoldBtn(btnRight, 'right');
+  bindBtn(btnLeft, 'left');
+  bindBtn(btnRight, 'right');
 
   function bindScroll(el, dy) {
-    function fire(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      if (!connected) return;
-      sendInput({ type: 'scroll', dy: dy });
-    }
-    el.addEventListener('touchstart', fire, { passive: false });
-    el.addEventListener('mousedown', fire);
+    el.addEventListener('touchstart', e => {
+      e.preventDefault(); e.stopPropagation();
+      if (!hasFrame) return;
+      sendInput({ type: 'scroll', dy });
+    }, { passive: false });
   }
   bindScroll(scrollUp, 3);
   bindScroll(scrollDown, -3);
 
-  // 手指点/拖画面：绝对移动鼠标
-  let canvasTouchId = null;
-  canvas.addEventListener('touchstart', function (e) {
-    if (!connected) return;
-    if (e.target.closest && e.target.closest('.joy-zone, .btn-zone')) return;
+  // 单指点画面定位（忽略摇杆/按钮区域）
+  canvas.addEventListener('touchstart', e => {
+    if (!hasFrame) return;
     const t = e.changedTouches[0];
-    canvasTouchId = t.identifier;
+    if (joyTouchId !== null && t.identifier === joyTouchId) return;
     const rect = canvas.getBoundingClientRect();
-    if (rect.width < 1 || rect.height < 1) return;
-    const cx = (t.clientX - rect.left) * (canvas.width / rect.width);
-    const cy = (t.clientY - rect.top) * (canvas.height / rect.height);
-    curX = cx / (meta.scale || 0.45);
-    curY = cy / (meta.scale || 0.45);
-    sendMousePos();
+    curX = ((t.clientX - rect.left) * (canvas.width / rect.width)) / (meta.scale || 0.4);
+    curY = ((t.clientY - rect.top) * (canvas.height / rect.height)) / (meta.scale || 0.4);
+    sendPos();
   }, { passive: true });
-
-  canvas.addEventListener('touchmove', function (e) {
-    if (!connected || canvasTouchId === null) return;
-    let t = null;
-    for (let i = 0; i < e.changedTouches.length; i++) {
-      if (e.changedTouches[i].identifier === canvasTouchId) {
-        t = e.changedTouches[i];
-        break;
-      }
-    }
-    if (!t) return;
-    const rect = canvas.getBoundingClientRect();
-    const cx = (t.clientX - rect.left) * (canvas.width / rect.width);
-    const cy = (t.clientY - rect.top) * (canvas.height / rect.height);
-    curX = cx / (meta.scale || 0.45);
-    curY = cy / (meta.scale || 0.45);
-    sendMousePos();
-  }, { passive: true });
-
-  canvas.addEventListener('touchend', function () { canvasTouchId = null; }, { passive: true });
-  canvas.addEventListener('touchcancel', function () { canvasTouchId = null; }, { passive: true });
-
-  // 桌面鼠标移动时同步本地光标记忆（方便之后点按键）
-  canvas.addEventListener('mousemove', function (e) {
-    if (!connected) return;
-    const rect = canvas.getBoundingClientRect();
-    if (rect.width < 1) return;
-    const cx = (e.clientX - rect.left) * (canvas.width / rect.width);
-    const cy = (e.clientY - rect.top) * (canvas.height / rect.height);
-    curX = cx / (meta.scale || 0.45);
-    curY = cy / (meta.scale || 0.45);
-  });
 })();
-
 </script>
 </body>
 </html>
