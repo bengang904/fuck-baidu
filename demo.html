@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="format-detection" content="telephone=no">
 <meta name="mobile-web-app-capable" content="yes">
-<title>Web v3</title>
+<title>Web v4</title>
 <style>
 :root {
   --bg: #0f1115;
@@ -289,11 +289,9 @@ kbd {
   pointer-events: auto;
 }
 
-/* 仅移动端显示（含 iPhone；iOS 有时 pointer:fine，需 .is-mobile） */
-@media (pointer: coarse), (max-width: 768px) {
-  .touch-layer { display: block; }
-}
-html.is-mobile .touch-layer { display: block; }
+/* 仅：移动端 + 已连接（能看到画面）后才显示操作控件 */
+.touch-layer { display: none !important; }
+html.is-mobile.is-connected .touch-layer { display: block !important; }
 html.is-desktop .touch-layer { display: none !important; }
 
 </style>
@@ -399,6 +397,7 @@ const MOUSE_THROTTLE = 40;
 let ws = null;
 let meta = { width: 1920, height: 1080, scale: 0.45 };
 let connected = false;
+let hasFrame = false; // 已收到至少一帧画面
 let wantConnected = false;   // 用户希望保持连接（用于自动重连）
 let currentRoom = '';
 let hostId = '';
@@ -496,13 +495,19 @@ function sendSignal(kind, payload, to) {
   try { ws.send(JSON.stringify(msg)); } catch {}
 }
 
-function markConnected(fromId) {
-  if (fromId) hostId = fromId;
+function setConnectedUI(on) {
+  if (on) document.documentElement.classList.add('is-connected');
+  else document.documentElement.classList.remove('is-connected');
+}
+
+function markConnected(fromId, opts) {
+  opts = opts || {};
+  if (fromId) hostId = String(fromId);
   const was = connected;
   connected = true;
   reconnectAttempt = 0;
   cancelDisconnectTimer();
-  setStatus('Connected', '');
+  setStatus(opts.status || 'Connected', '');
   connectBtn.disabled = false;
   connectBtn.textContent = 'Connect';
   disconnectBtn.disabled = false;
@@ -510,13 +515,19 @@ function markConnected(fromId) {
   main.classList.remove('idle');
   setError('');
   startKeepAlive();
-  if (!was) canvas.focus();
+  // 只有真正收到过画面才显示手机操作控件
+  if (hasFrame) setConnectedUI(true);
+  if (!was) {
+    try { canvas.focus(); } catch (e) {}
+  }
 }
 
 function hardDisconnect(reason, allowReconnect) {
   clearTimers();
   connected = false;
   hostId = '';
+  hasFrame = false;
+  setConnectedUI(false);
   if (ws) {
     intentionalClose = !allowReconnect;
     try { ws.close(); } catch {}
@@ -562,6 +573,9 @@ function connect(isRetry) {
   localStorage.setItem('remote_ws_url', SIGNALING_URL);
   localStorage.setItem('remote_room', room);
   currentRoom = room;
+  hasFrame = false;
+  setConnectedUI(false);
+  hostId = '';
   setError(isRetry ? '正在重连…' : '');
   setStatus(isRetry ? '重连中…' : 'Connecting…', 'connecting');
   connectBtn.disabled = true;
@@ -635,22 +649,30 @@ function connect(isRetry) {
       const roster = m.roster || [];
       const others = roster.filter(id => id !== PLAYER_ID);
       if (!others.length) {
-        if (connected) {
-          // 主机暂时离开，宽限等待
+        if (hasFrame || connected) {
           scheduleDisconnectGrace('主机离开房间');
         } else {
           setStatus('等待主机…', 'connecting');
         }
         return;
       }
-      hostId = others.find(id => String(id).startsWith('host-')) || others[0];
+      // 优先 host-*，保证输入发到被控端
+      const hid = others.find(id => String(id).startsWith('host-')) || others[0];
+      hostId = hid;
       cancelDisconnectTimer();
-      if (!connected) {
-        clearTimeout(connectTimeout);
-        markConnected(hostId);
+      clearTimeout(connectTimeout);
+      if (!hasFrame) {
+        // 已发现主机，但还没画面：不显示操作控件
+        connected = true; // 允许随后收帧；输入等有画面更稳
+        setStatus('等待画面…', 'connecting');
+        overlay.classList.add('hidden');
+        main.classList.remove('idle');
+        startKeepAlive();
+        disconnectBtn.disabled = false;
+        connectBtn.disabled = false;
+        connectBtn.textContent = 'Connect';
       } else {
-        hostId = hostId;
-        setStatus('Connected', '');
+        markConnected(hostId);
       }
       return;
     }
@@ -663,7 +685,7 @@ function connect(isRetry) {
       if (p.width) meta.width = p.width;
       if (p.height) meta.height = p.height;
       if (p.scale) meta.scale = p.scale;
-      if (m.from) hostId = m.from;
+      if (m.from) hostId = String(m.from);
       return;
     }
 
@@ -672,15 +694,23 @@ function connect(isRetry) {
       if (p.width) meta.width = p.width;
       if (p.height) meta.height = p.height;
       if (p.scale) meta.scale = p.scale;
-      if (m.from) hostId = m.from;
+      if (m.from) hostId = String(m.from);
+      if (!hostId && m.from) hostId = String(m.from);
       if (!p.data) return;
 
       lastFrameAt = Date.now();
       cancelDisconnectTimer();
+      clearTimeout(connectTimeout);
 
-      const bin = atob(p.data);
-      const arr = new Uint8Array(bin.length);
-      for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+      let arr;
+      try {
+        const bin = atob(p.data);
+        arr = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+      } catch (err) {
+        console.warn('frame decode error', err);
+        return;
+      }
       const blob = new Blob([arr], { type: 'image/jpeg' });
       const url = URL.createObjectURL(blob);
       const img = new Image();
@@ -697,15 +727,21 @@ function connect(isRetry) {
           fps = frames;
           frames = 0;
           lastFpsTime = now;
-          statsEl.textContent = `${fps} FPS · ${canvas.width}×${canvas.height} · remote ${meta.width}×${meta.height}`;
+          statsEl.textContent = fps + ' FPS · ' + canvas.width + '×' + canvas.height + ' · remote ' + meta.width + '×' + meta.height;
+        }
+        // 画面出来后才算真正可操作
+        if (!hasFrame) {
+          hasFrame = true;
+          markConnected(hostId || m.from, { status: 'Connected' });
+        } else {
+          if (hostId) setConnectedUI(true);
+          connected = true;
         }
       };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+      };
       img.src = url;
-
-      if (!connected) {
-        clearTimeout(connectTimeout);
-        markConnected(m.from || hostId);
-      }
       return;
     }
   };
@@ -733,8 +769,13 @@ function canvasToRemote(e) {
 }
 
 function sendInput(obj) {
-  if (!connected || !hostId) return;
-  sendSignal('input', obj, hostId);
+  if (!connected || !ws || ws.readyState !== 1) return;
+  // 优先发给 host；若还没有 hostId，房间内广播（兼容信令）
+  if (hostId) {
+    sendSignal('input', obj, hostId);
+  } else {
+    sendSignal('input', obj, undefined);
+  }
 }
 
 canvas.addEventListener('mousemove', (e) => {
